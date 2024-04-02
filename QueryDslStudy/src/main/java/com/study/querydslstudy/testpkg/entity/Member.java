@@ -1,10 +1,7 @@
 package com.study.querydslstudy.testpkg.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Table(name = "Member")
@@ -12,9 +9,10 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString(of = "id, username, age")
 public class Member {
 
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "member_id")
     private Long id;
 
@@ -39,6 +37,14 @@ public class Member {
     public void changeTeam(Team team){
         this.team = team;
         team.getMembers().add(this);
+    }
+
+    public Member(String username){
+        this(username,0);
+    }
+
+    public Member(String username, int age){
+        this(username, age, null);
     }
 
 }
