@@ -1,6 +1,9 @@
 package com.study.querydslstudy.testpkg.entity;
 
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
@@ -161,6 +164,131 @@ public class QueryDslBasicTest {
 
         System.out.println(teamA);
 //        System.out.println(teamB);
+
+    }
+
+    @Test
+    void join(){
+
+        contextLoads();
+        em.persist(new Member(null,100));
+        em.persist(new Member("member5",100));
+        em.persist(new Member("member6",100));
+
+        JPAQueryFactory jpaQueryFactory = new JPAQueryFactory(em);
+
+        List<Member> memberList = jpaQueryFactory.selectFrom(member)
+//                .join(member.team, team) 연관관계 이너 조인
+//                .leftJoin(member.team, team) 연관관계 레프트 조인
+//                .from(member, team) 세타 조인.
+//                .join(team).on(team.name.eq(member.team.name)) 연관관계 없는 경우에도 조인(일반 쿼리 조인)
+                .where(team.name
+                        .eq("teamA"))
+                .fetch();
+
+        System.out.println(memberList);
+
+    }
+
+    @Test
+    void fetchJoin(){
+
+        contextLoads();
+        em.persist(new Member(null,100));
+        em.persist(new Member("member5",100));
+        em.persist(new Member("member6",100));
+
+        JPAQueryFactory jpaQueryFactory = new JPAQueryFactory(em);
+
+        em.flush();
+        em.clear();
+
+//        Member member1 = jpaQueryFactory
+//                .selectFrom(member)
+//                .where(member.username.eq("member1"))
+//                .fetchOne();
+//
+//        System.out.println(member1.getTeam().getName());
+
+        Member member2 = jpaQueryFactory
+                .selectFrom(member)
+                .join(member.team,team)
+                .fetchJoin()
+                .where(member.username.eq("member1"))
+                .fetchOne();
+
+        System.out.println(member2);
+    }
+
+    @Test
+    void subQuery(){
+
+
+        contextLoads();
+        em.persist(new Member(null,100));
+        em.persist(new Member("member5",100));
+        em.persist(new Member("member6",100));
+
+        JPAQueryFactory jpaQueryFactory = new JPAQueryFactory(em);
+
+        QMember msub = new QMember("msub");
+
+        List<Member> memberList = jpaQueryFactory.selectFrom(member)
+                .where(member.age.gt(
+                        JPAExpressions.select(msub.age.max()).from(msub)
+                )).fetch();
+
+        System.out.println(memberList);
+
+
+    }
+
+    @Test
+    void caseWhen(){
+
+        contextLoads();
+        em.persist(new Member(null,100));
+        em.persist(new Member("member5",100));
+        em.persist(new Member("member6",100));
+
+        JPAQueryFactory jpaQueryFactory = new JPAQueryFactory(em);
+
+        List<String> list = jpaQueryFactory.select(
+                        member.age.when(10).then("열살")
+                                .when(20).then("스무살")
+                                .otherwise("아님")
+
+
+                ).from(member)
+                .fetch();
+
+        List<String> list2 = jpaQueryFactory.select(
+                        new CaseBuilder().when(member.age.between(10,20)).then("하이")
+                                .otherwise("ddd")
+                ).from(member)
+                .fetch();
+
+        System.out.println(list);
+
+    }
+
+    @Test
+    void appendStringConst(){
+
+        contextLoads();
+        em.persist(new Member(null,100));
+        em.persist(new Member("member5",100));
+        em.persist(new Member("member6",100));
+
+        JPAQueryFactory jpaQueryFactory = new JPAQueryFactory(em);
+
+        jpaQueryFactory.select(member.username, Expressions.constant("A"))
+                .from(member)
+                .fetch();
+
+        jpaQueryFactory.select(
+                member.username.concat("_").concat(member.age.stringValue())
+        ).from(member).fetch();
 
     }
 
