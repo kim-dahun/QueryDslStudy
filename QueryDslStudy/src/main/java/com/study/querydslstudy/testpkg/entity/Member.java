@@ -9,7 +9,7 @@ import lombok.*;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(of = "id, username, age")
+@ToString
 public class Member {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)

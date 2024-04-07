@@ -1,10 +1,13 @@
 package com.study.querydslstudy.testpkg.entity;
 
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.study.querydslstudy.testpkg.dto.MemberDto;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import org.assertj.core.api.Assertions;
@@ -289,6 +292,134 @@ public class QueryDslBasicTest {
         jpaQueryFactory.select(
                 member.username.concat("_").concat(member.age.stringValue())
         ).from(member).fetch();
+
+    }
+
+    @Test
+    void tupleProjection(){
+
+        JPAQueryFactory jpaQueryFactory = new JPAQueryFactory(em);
+
+        List<Tuple> tuples = jpaQueryFactory.select(member.id
+                        , member.age
+                        , member.team
+                )
+                .from(member).fetch();
+
+        for(Tuple x : tuples){
+            System.out.println(x.get(member.age));
+        }
+
+    }
+
+    @Test
+    void findDto(){
+
+        JPAQueryFactory jpaQueryFactory = new JPAQueryFactory(em);
+
+        List<MemberDto> memberDtos = em.createQuery("select new com.study.querydslstudy.testpkg.dto.MemberDto(m.username, m.age) from Member m", MemberDto.class).getResultList();
+
+        System.out.println(memberDtos);
+
+
+    }
+
+    @Test
+    void findDtoBySetter(){ // 세터 주입
+
+        JPAQueryFactory jpaQueryFactory = new JPAQueryFactory(em);
+
+        jpaQueryFactory.select(Projections.bean(MemberDto.class
+            ,member.username
+                ,member.age
+        )).from(member)
+                .fetch();
+
+    }
+
+    @Test
+    void findDtoByField(){ // 필드연결
+
+        JPAQueryFactory jpaQueryFactory = new JPAQueryFactory(em);
+
+        jpaQueryFactory.select(Projections.fields(MemberDto.class
+                        ,member.username
+                        ,member.age
+                )).from(member)
+                .fetch();
+
+    }
+
+    @Test
+    void findDtoByConstructor(){ // 생성자
+
+        JPAQueryFactory jpaQueryFactory = new JPAQueryFactory(em);
+
+        jpaQueryFactory.select(Projections.constructor(MemberDto.class
+                        ,member.username
+                        ,member.age
+                )).from(member)
+                .fetch();
+
+    }
+
+    @Test
+    void dynamicQueryBooleanBuilder(){
+
+        JPAQueryFactory jqf = new JPAQueryFactory(em);
+
+        jqf.select(member.username)
+                .from(member)
+                .where(new BooleanBuilder(member.username.like("%m%"))).fetch();
+
+
+    }
+
+    @Test
+    void bulkUpdate(){
+        contextLoads();
+
+        JPAQueryFactory jqf = new JPAQueryFactory(em);
+
+        long count = jqf.update(member)
+                .set(member.username,"비회원")
+                .where(member.age.lt(20))
+                .execute();
+        
+        // JPA는 영속성 컨텍스트를 최우선으로 여김
+        // update 벌크 연산의 경우, 영속성 컨텍스트 업데이트 없이 바로 DB로 들어가기 때문에
+        // update 벌크 연산 후 select를 바로 해올 경우, 영속성 컨텍스트에 남아있는 변화되기 전 값이 불러와짐
+        // 따라서 벌크 연산 이후, flush와 clear를 통해 영속성 컨텍스트를 초기화한 후, 현재 단계의 트랜잭션을 마무리하는 방식으로
+        // db를 강제로 동기화하여 해당 문제를 해결
+
+    }
+
+    @Test
+    void bulkAdd(){
+
+        JPAQueryFactory jqf = new JPAQueryFactory(em);
+
+        jqf.update(member)
+                .set(member.age, member.age.multiply(2))
+                .execute();
+
+    }
+
+    @Test
+    void bulkDelete(){
+        JPAQueryFactory jqf = new JPAQueryFactory(em);
+
+        jqf.delete(member)
+                .where(member.age.gt(10))
+                .execute();
+
+        jqf.select(
+                Expressions.stringTemplate("function('replace',{0},{1},{2}",member.username,"member","mem")
+        )
+                .from(
+                        member
+                )
+                .fetch();
 
     }
 

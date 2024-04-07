@@ -1,3 +1,5 @@
 
 QueryDslStudy/src/main/generated/com/study/querydslstudy/testpkg/entity/QTeam.java
 QueryDslStudy/src/main/generated/com/study/querydslstudy/testpkg/entity/QMember.java
+QueryDslStudy/src/main/java/com/study/querydslstudy/testpkg/dto/MemberDto.java
+QueryDslStudy/src/main/generated/com/study/querydslstudy/testpkg/dto/QMemberDto.java
