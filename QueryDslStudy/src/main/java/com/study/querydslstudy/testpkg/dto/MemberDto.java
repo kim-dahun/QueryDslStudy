@@ -8,9 +8,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class MemberDto {
 
+    private Long Id;
+
     private String username;
 
     private int age;
+
+    private Long teamId;
+
+    private String teamName;
 
     @QueryProjection
     public MemberDto (String username, int age){

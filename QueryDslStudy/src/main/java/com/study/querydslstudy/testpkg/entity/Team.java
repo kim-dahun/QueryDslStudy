@@ -12,7 +12,6 @@ import java.util.List;
 @NoArgsConstructor
 @Setter
 @Getter
-@ToString
 public class Team {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
